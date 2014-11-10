@@ -1,0 +1,27 @@
+{
+	"manifest_version": 2,
+	"name": "InterestsRecorder",
+	"version": "1.0",
+	"description": "Records interests by monitoring url clicks.",
+	"permissions": [
+		"geolocation",
+		"storage",
+		"https://secure.flickr.com/"
+	],
+	"content_scripts": 
+	[
+		{
+			"matches": ["<all_urls>"],
+			"js": ["content.js"],
+			"run_at": "document_end"
+		}
+	],
+	"background": {
+		"scripts": ["eventPage.js"],
+		"persistent": false
+	},
+	"browser_action": {
+		"default_icon": "eye106.png",
+		"default_popup": "popup.html"
+	}
+}
