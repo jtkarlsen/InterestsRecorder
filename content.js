@@ -5,11 +5,8 @@
 function submitInterest(e) {
 	// different types at the moment to allow possible alteration in the future.
 	console.log(e);
-	if (e.type == "title") {
-		chrome.runtime.sendMessage({command: "recordPageVisit", title: e.title, url:e.url});
-	}
-	else if (e.type == "googleInputValue") {
-		chrome.runtime.sendMessage({command: "recordSearch", interest: e.interest});
+	if (e.type == "domain") {
+		chrome.runtime.sendMessage({command: "recordPageVisit", domain: e.domain});
 	}
 	else if (e.type == "link") {
 		chrome.runtime.sendMessage({command: "recordLink", interest: e.interest});
@@ -24,22 +21,21 @@ function clickEvent(e) {
 	}
 }
 
+
+
 /**
  * Set up event handler for mouse clicks on the page.
  */
 document.body.addEventListener('click', clickEvent, true);
 
-// setTimeout is to accomodate for sited with dynamically loaded data.
+// setTimeout is to accommodate for sited with dynamically loaded data.
 setTimeout(function() {
-	if(window.location.href.indexOf("https://www.google.no/") > -1) {
-		submitInterest({type:"googleInputValue",interest:document.getElementById('gbqfq').value});
-	}
-	//submitInterest({type:"title",title:document.title,url:window.location.href});
-}, 1000);
+	submitInterest({type:"domain", domain:document.domain});
+}, 10000);
 
 if(window.location.href.indexOf("http://localhost:8080/") > -1) {
 	
-	chrome.storage.sync.get('query', function (result) {
+	chrome.storage.local.get('query', function (result) {
 		var query = result.query;
 		if (query === undefined) {
 			query = {

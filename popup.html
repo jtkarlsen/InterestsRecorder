@@ -17,8 +17,22 @@
     <script src="popup.js"></script>
   </head>
   <body>
-	<button id="generateButton">Generate user profile</button>
-	<button id="deleteButton">Delete user profile</button>
+    <p id="message">Not logged in</p>
+    <div id="login">
+        Username: <input type="text" id="input-username">
+        <br/>
+        Password: <input type="password" id="input-password">
+        <br/>
+        <button id="setUserCredentials">Login</button>
+        <br/>
+        <button id="createUserCredentials">Create user</button>
+    </div>
+    <div id="logout">
+
+        <button id="removeUserCredentials">Logout</button>
+
+    </div>
+
   </body>
 </html>
 

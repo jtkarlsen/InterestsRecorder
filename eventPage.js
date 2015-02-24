@@ -1,8 +1,11 @@
 ﻿/**
  * Collect the contextual data of link clicks and store it.
  */
- 
-var sessionId = Date.now();
+
+var session;
+var machineId;
+
+var MILLISECONDS_PER_HOUR = 60 /* min/hour */ * 60 /* sec/min */ * 1000 /* ms/s */;
 
 var englishStopwords = [
 	'being', 'should', 'ourselves', 'further', 'ours', 'what', 'if', 'your', 'most', 'their', 'same', 'own', 'to', 
@@ -30,53 +33,45 @@ var norwegianStopwords = [
 	'hennar', 'om', 'han', 'blir', 'ett', 'noen', 'da', 'ditt', 'over', 'hvilke', 'man', 'meg', 'nokon', 'kvi', 'eitt', 
 	'sånn', 'ved', 'noe', 'dette', 'var', 'hvilken', 'dykk', 'inn', 'nokre', 'her', 'deg', 'må', 'gi', 'ga', 'igjen'
 ]
- 
-chrome.runtime.onMessage.addListener (
-    function (request, sender) {
 
+
+ 
+chrome.runtime.onMessage.addListener(
+    function (request, sender) {
+        setSessionTimeout();
         if (request.command == "recordLink") {
 			var interest = {};
-			interest.sessionId = sessionId;
 			interest.interest = request.interest;
 			interest.time = getTime();
-            navigator.geolocation.getCurrentPosition (function (position) {
-                interest.geoLatitude = position.coords.latitude
-                interest.geoLongditude = position.coords.longitude
-				storeInterest(interest);
-            }, function() {
-					storeInterest(interest);
-			});
+            storeInterest(interest);
         }
 		else if(request.command == "recordPageVisit") {
-			var interest = {};
-			interest.sessionId = sessionId;
-			interest.title = request.title;
-			interest.url = request.url;
-			interest.time = getTime();
-            navigator.geolocation.getCurrentPosition (function (position) {
-                interest.geoLatitude = position.coords.latitude
-                interest.geoLongditude = position.coords.longitude
-				storeInterest(interest);
-            }, function() {
-					storeInterest(interest);
-			});
+			var domain = request.domain;
+            chrome.storage.local.get('username', function (result) {
+                if (result.username !== undefined && result.username !== '') {
+                    submitDomain(domain);
+                }
+            })
 		}
-		else if(request.command == "recordSearch") {
-			var interest = {};
-			interest.sessionId = sessionId;
-			interest.interest = request.interest;
-			interest.time = getTime();
-            navigator.geolocation.getCurrentPosition (function (position) {
-                interest.geoLatitude = position.coords.latitude
-                interest.geoLongditude = position.coords.longitude
-				storeInterest(interest);
-            }, function() {
-					storeInterest(interest);
-			});
-		}
-		else if(request.command == 'generateQuery') {
-			createQuery();
-		}
+        else if(request.command == "userLogout") {
+            setNewSession();
+        }
+		//else if(request.command == "recordSearch") {
+		//	var interest = {};
+		//	interest.sessionId = sessionId;
+		//	interest.interest = request.interest;
+		//	interest.time = getTime();
+         //   navigator.geolocation.getCurrentPosition (function (position) {
+         //       interest.geoLatitude = position.coords.latitude
+         //       interest.geoLongditude = position.coords.longitude
+		//		storeInterest(interest);
+         //   }, function() {
+		//			storeInterest(interest);
+		//	});
+		//}
+		//else if(request.command == 'generateQuery') {
+		//	createQuery();
+		//}
         return true; // Needed because the response is asynchronous
     }
 );
@@ -111,43 +106,51 @@ function storeInterest(interest) {
 	if(interest.interest === '') {
 		return;
 	}
-	cleanedInterests = interest.interest.replace(/[^-æøåa-zA-Z0-9 ]/g, '');
-	console.log(cleanedInterests);
+	var cleanedInterests = interest.interest.replace(/[^-æøåa-zA-Z0-9 ]/g, '');
 	
-	cleanedInterestsWithoutStopwords = removeStopwords(cleanedInterests);
-	console.log(cleanedInterestsWithoutStopwords);
+	var cleanedInterestsWithoutStopWords = removeStopWords(cleanedInterests);
 	
-	interest.interest = cleanedInterestsWithoutStopwords;
-	
+	interest.interest = cleanedInterestsWithoutStopWords;
 	if(interest.interest.length > 0) {
-		chrome.storage.sync.get('interests', function (result) {
-			var interests = result.interests;
-			if (interests === undefined) {
-				interests = [];
-			}
-			console.log(interests);
-			interests.push(interest);
-			saveInterests(interests);
-		});
+        chrome.storage.local.get('username', function (result) {
+            if (result.username !== undefined && result.username !== '') {
+                submitInterest(interest, result.username)
+            }
+        })
 	}
-	
 }
 
-function saveInterests(interests) {
-		chrome.storage.sync.set({'interests': interests});
-}
-
-function removeStopwords(interest)
-{
-	
-	return getNoneStopWords(interest)
-	/*var url = 'http://localhost:5000/sentence/';
+function submitInterest(interest, userId) {
+	var url = 'http://129.242.219.56:5000/interest/';
     var xmlHttp = null;
+    var waitcount = 0;
+    while (machineId === undefined) {
+        waitcount += 1;
+    }
+    if (waitcount > 0) {
+        console.log('waitcount: '+waitcount);
+    }
+    var params = "userId="+userId+"&sessionId="+session['sessionId']+"&locationId="+machineId+"&interest="+JSON.stringify(interest);
 
     xmlHttp = new XMLHttpRequest();
-    xmlHttp.open( "GET", url+interest, false );
-    xmlHttp.send( null );
-    return JSON.parse(xmlHttp.responseText);*/
+    xmlHttp.open( "POST", url, true );
+    xmlHttp.setRequestHeader("Content-type", "application/x-www-form-urlencoded");
+    xmlHttp.send( params );
+}
+
+function submitDomain(domain) {
+    var url = 'http://129.242.219.56:5000/domain/';
+    var xmlHttp = null;
+    var params = "domain="+domain+"&sessionId="+session['sessionId'];
+
+    xmlHttp = new XMLHttpRequest();
+    xmlHttp.open( "POST", url, true );
+    xmlHttp.setRequestHeader("Content-type", "application/x-www-form-urlencoded");
+    xmlHttp.send( params );
+}
+
+function removeStopWords(interest) {
+	return getNoneStopWords(interest)
 }
 
 function getNoneStopWords(sentence) {
@@ -163,91 +166,139 @@ function getNoneStopWords(sentence) {
 
 	for (i = 0; i < wordArr.length; i++) {
 		word = wordArr[i].trim().toLowerCase();
-		if (!commonObj[word] && isNaN(word)) {
+		if (!commonObj[word] && isNaN(word) && word.length > 1) {
 			uncommonArr.push(word);
 		}
 	}
 	return uncommonArr;
 }
 
-setTimeout(createQuery, 1000, 1000*60*15);
-
-function createQuery() {
-	console.log('creating query');
-	chrome.storage.sync.get('interests', function (result) {
-			var interests = result.interests;
-			if (interests === undefined) {
-				interests = [];
-			}
-			var queryObject = createQueryObject(interests);
-			console.log(queryObject);
-			chrome.storage.sync.set({'query': queryObject});
-			console.log('query created');
-		});
+function setMachineId() {
+    chrome.storage.local.get('machineId', function (result) {
+        if (result.machineId === undefined) {
+            machineId = generateMachineId();
+            chrome.storage.local.set({'machineId': machineId})
+        } else {
+            machineId = result.machineId
+        }
+    })
 }
 
-function createQueryObject(interests) {
-	var interestTuples = [];
-	var shouldArray = [];
-	var interestsString = "";
-	var msTreshhold = 2592000000;  // 172800000 = 48 hours, 2592000000 = 30 days
-
-	for(var i = 0; i<interests.length; i++) {
-		var time = interests[i].time;
-		time = time.replace(/'/g, "");
-		time = time.slice(0, -1);
-		var freshness = getFreshness(time);
-		var timeBoost = (msTreshhold - freshness) / 1000;
-		if (timeBoost > 0) {
-			var subInterests = interests[i].interest;
-			for(var j = 0; j<subInterests.length; j++) {
-				var notFound = true;
-				var interest = subInterests[j];
-				for (var k = 0; k<interestTuples.length; k++) {
-					if(interestTuples[k].interest === interest) {
-						interestTuples[k].count = interestTuples[k].count + timeBoost;
-						notFound = false;
-					}
-				}
-				if (interestTuples.length === 0 || notFound){
-					var interestTuple = {'interest':interest, 'count':timeBoost};
-					interestTuples.push(interestTuple);
-				}
-			}
-		}
-		
-	}
-	for(var l = 0; l<interestTuples.length; l++) {
-		interestsString += (interestTuples[l].interest + ' ');
-
-		if(interestTuples[l].count > 0) {
-			var should = {
-				"multi_match": {
-					"query": interestTuples[l].interest,
-					"fields": [ "title" ],
-					"boost": interestTuples[l].count
-				}
-			};
-			shouldArray.push(should);
-		}
-	}
-	console.log(interestTuples);
-	var query;
-	if(interestsString.length > 0) {
-		query = {
-			"query": {
-				"bool": {
-//					"must": [
-//						{
-//							"multi_match": {
-//								"query":    interestsString,
-//								"fields": [ "title" ]
-//							}
-//						}],
-					"should": shouldArray
-				}
-			}
-		};
-	}
-	return query;
+function generateMachineId() {
+    // From user broofa on StackOverflow - https://stackoverflow.com/questions/105034/create-guid-uuid-in-javascript
+    var id = 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g, function(c) {
+        var r = Math.random()*16|0, v = c == 'x' ? r : (r&0x3|0x8);
+        return v.toString(16);
+    });
+    return id
 }
+
+function setSessionTimeout() {
+    var d = Date.now();
+    if (session == undefined || +session['timeout'] < +d || (+session['sessionId']+4*MILLISECONDS_PER_HOUR < +d) ) {
+        session = {};
+        session['sessionId'] = d;
+    }
+    var t = new Date(+d + 1*MILLISECONDS_PER_HOUR);
+    session['timeout'] = t;
+    chrome.storage.local.set({'session': session})
+}
+
+function setSession() {
+    chrome.storage.local.get('session', function (result) {
+        if (result.session === undefined) {
+            setSessionTimeout()
+        } else {
+            session = result.session
+        }
+    })
+}
+
+function setNewSession() {
+    session = undefined;
+    setSessionTimeout();
+}
+
+setMachineId();
+setSession();
+//setTimeout(createQuery, 1000, 1000*60*15);
+
+//function createQuery() {
+//	console.log('creating query');
+//	chrome.storage.sync.get('interests', function (result) {
+//			var interests = result.interests;
+//			if (interests === undefined) {
+//				interests = [];
+//			}
+//			var queryObject = createQueryObject(interests);
+//			console.log(queryObject);
+//			chrome.storage.local.set({'query': queryObject});
+//			console.log('query created');
+//		});
+//}
+
+//function createQueryObject(interests) {
+//	var interestTuples = [];
+//	var shouldArray = [];
+//	var interestsString = "";
+//	var msTreshhold = 2592000000;  // 172800000 = 48 hours, 2592000000 = 30 days
+//
+//	for(var i = 0; i<interests.length; i++) {
+//		var time = interests[i].time;
+//		time = time.replace(/'/g, "");
+//		time = time.slice(0, -1);
+//		var freshness = getFreshness(time);
+//		var timeBoost = (msTreshhold - freshness) / 1000;
+//		if (timeBoost > 0) {
+//			var subInterests = interests[i].interest;
+//			for(var j = 0; j<subInterests.length; j++) {
+//				var notFound = true;
+//				var interest = subInterests[j];
+//				for (var k = 0; k<interestTuples.length; k++) {
+//					if(interestTuples[k].interest === interest) {
+//						interestTuples[k].count = interestTuples[k].count + timeBoost;
+//						notFound = false;
+//					}
+//				}
+//				if (interestTuples.length === 0 || notFound){
+//					var interestTuple = {'interest':interest, 'count':timeBoost};
+//					interestTuples.push(interestTuple);
+//				}
+//			}
+//		}
+//		
+//	}
+//	for(var l = 0; l<interestTuples.length; l++) {
+//		interestsString += (interestTuples[l].interest + ' ');
+//
+//		if(interestTuples[l].count > 0) {
+//			var should = {
+//				"multi_match": {
+//					"query": interestTuples[l].interest,
+//					"fields": [ "title" ],
+//					"boost": interestTuples[l].count
+//				}
+//			};
+//			shouldArray.push(should);
+//		}
+//	}
+//	console.log(interestTuples);
+//	var query;
+//	if(interestsString.length > 0) {
+//		query = {
+//			"query": {
+//				"bool": {
+////					"must": [
+////						{
+////							"multi_match": {
+////								"query":    interestsString,
+////								"fields": [ "title" ]
+////							}
+////						}],
+//					"should": shouldArray
+//				}
+//			}
+//		};
+//	}
+//	return query;
+//}

@@ -1,12 +1,11 @@
 {
 	"manifest_version": 2,
-	"name": "InterestsRecorder",
-	"version": "1.0",
-	"description": "Records interests by monitoring url clicks.",
+	"name": "InterestRecorder",
+	"version": "1.1",
+	"description": "Records interests by monitoring link clicks.",
 	"permissions": [
-		"geolocation",
 		"storage",
-		"https://secure.flickr.com/"
+        "http://129.242.219.56:5000/"
 	],
 	"content_scripts": 
 	[
