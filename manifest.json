@@ -1,11 +1,12 @@
 {
 	"manifest_version": 2,
 	"name": "InterestRecorder",
-	"version": "1.1",
+	"version": "1.3",
 	"description": "Records interests by monitoring link clicks.",
 	"permissions": [
 		"storage",
-        "http://129.242.219.56:5000/"
+        "http://129.242.219.56:5000/",
+        "http://129.242.219.56/"
 	],
 	"content_scripts": 
 	[

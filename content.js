@@ -14,7 +14,8 @@ function submitInterest(e) {
 }
 
 function clickEvent(e) {
-	if(window.location.href.indexOf("http://localhost:8080/") > -1) {
+	if(window.location.href.indexOf("http://129.242.219.56/") > -1
+        || window.location.href.indexOf("http://localhost:8080/") > -1) {
 		
 	} else if(e.target.localName == "a" || e.target.parentNode.localName == "a") {
 		submitInterest({type:"link", interest:e.target.innerText});
@@ -33,31 +34,15 @@ setTimeout(function() {
 	submitInterest({type:"domain", domain:document.domain});
 }, 10000);
 
-if(window.location.href.indexOf("http://localhost:8080/") > -1) {
-	
-	chrome.storage.local.get('query', function (result) {
-		var query = result.query;
-		if (query === undefined) {
-			query = {
-				"query": {
-				"match_all": {}
-			},
-			"sort": {
-				"pubDate": {
-					"order": "desc"
-				}
-			}
-			};
+if(window.location.href.indexOf("http://129.242.219.56/") > -1
+    || window.location.href.indexOf("http://localhost:8080/") > -1) {
+
+	chrome.storage.local.get('username', function (result) {
+		var username = result.username;
+		if (username !== undefined || username !== '') {
+            var event = new CustomEvent('InterestsEvent', { 'detail': username });
+            event.initEvent('feedRecorderInterestsEvent');
+            document.dispatchEvent(event);
 		}
-		var event = new CustomEvent('InterestsEvent', { 'detail': query });
-        event.initEvent('feedRecorderInterestsEvent');
-        document.dispatchEvent(event);
 	});
 }
-
-
-/**
-* List of possible data to access
-*/
-
-// get selected text: window.getSelection().toString()
