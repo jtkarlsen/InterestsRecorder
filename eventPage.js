@@ -16,7 +16,7 @@ var englishStopwords = [
 	'those', 'then', 'once', 'few', 'the', 'yourself', 'when', 'why', 'other', 'into', 'theirs', 'now', 'too', 'itself', 
 	'at', 'herself', 'up', 'very', 'off', 'an', 'be', 'i', 'and', 'for', 'been', 'himself', 'under', 'all', 't', 'nor', 
 	'whom', 'have', 'hers', 'below', 'do', 's', 'does', 'this', 'we', 'his', 'each', 'my', 'is', 'yours', 'how', 'over', 
-	'of', 'don', 'from', 'who', 'through', 'down', 'has', 'but', 'about', 'while', 'her'
+	'of', 'don', 'from', 'who', 'through', 'down', 'has', 'but', 'about', 'while', 'her', 'comment', 'new', 'prev'
 ]
 
 var norwegianStopwords = [
@@ -31,7 +31,8 @@ var norwegianStopwords = [
 	'vore', 'i', 'nå', 'for', 'mot', 'bare', 'varte', 'um', 'ut', 'denne', 'der', 'mine', 'hans', 'kvifor', 'ja', 
 	'begge', 'slik', 'båe', 'den', 'hadde', 'til', 'deres', 'som', 'di', 'medan', 'somt', 'er', 'ikkje', 'også', 
 	'hennar', 'om', 'han', 'blir', 'ett', 'noen', 'da', 'ditt', 'over', 'hvilke', 'man', 'meg', 'nokon', 'kvi', 'eitt', 
-	'sånn', 'ved', 'noe', 'dette', 'var', 'hvilken', 'dykk', 'inn', 'nokre', 'her', 'deg', 'må', 'gi', 'ga', 'igjen'
+	'sånn', 'ved', 'noe', 'dette', 'var', 'hvilken', 'dykk', 'inn', 'nokre', 'her', 'deg', 'må', 'gi', 'ga', 'igjen', 'kommentar',
+    'kommentarer'
 ]
 
 
@@ -42,7 +43,7 @@ chrome.runtime.onMessage.addListener(
         if (request.command == "recordLink") {
 			var interest = {};
 			interest.interest = request.interest;
-			interest.time = getTime();
+            interest.domain = request.domain;
             storeInterest(interest);
         }
 		else if(request.command == "recordPageVisit") {

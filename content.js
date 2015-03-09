@@ -3,13 +3,12 @@
  */
 
 function submitInterest(e) {
-	// different types at the moment to allow possible alteration in the future.
 	console.log(e);
 	if (e.type == "domain") {
 		chrome.runtime.sendMessage({command: "recordPageVisit", domain: e.domain});
 	}
 	else if (e.type == "link") {
-		chrome.runtime.sendMessage({command: "recordLink", interest: e.interest});
+		chrome.runtime.sendMessage({command: "recordLink", interest: e.interest, domain: e.domain});
 	}
 }
 
@@ -18,11 +17,9 @@ function clickEvent(e) {
         || window.location.href.indexOf("http://localhost:8080/") > -1) {
 		
 	} else if(e.target.localName == "a" || e.target.parentNode.localName == "a") {
-		submitInterest({type:"link", interest:e.target.innerText});
+		submitInterest({type:"link", interest:e.target.innerText, domain:document.domain});
 	}
 }
-
-
 
 /**
  * Set up event handler for mouse clicks on the page.
