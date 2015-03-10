@@ -1,7 +1,7 @@
 {
 	"manifest_version": 2,
 	"name": "InterestRecorder",
-	"version": "1.4.2",
+	"version": "1.4.3",
 	"description": "Records interests by monitoring link clicks.",
 	"permissions": [
 		"storage",
