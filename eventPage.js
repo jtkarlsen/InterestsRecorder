@@ -39,8 +39,8 @@ var norwegianStopwords = [
  
 chrome.runtime.onMessage.addListener(
     function (request, sender) {
-        setSessionTimeout();
         if (request.command == "recordLink") {
+            setSessionTimeout();
 			var interest = {};
 			interest.interest = request.interest;
             interest.domain = request.domain;
@@ -48,31 +48,17 @@ chrome.runtime.onMessage.addListener(
         }
 		else if(request.command == "recordPageVisit") {
 			var domain = request.domain;
-            chrome.storage.local.get('username', function (result) {
-                if (result.username !== undefined && result.username !== '') {
-                    submitDomain(domain);
-                }
-            })
+            if (isSessionValid) {
+                chrome.storage.local.get('username', function (result) {
+                    if (result.username !== undefined && result.username !== '') {
+                        submitDomain(domain);
+                    }
+                })
+            }
 		}
         else if(request.command == "userLogout") {
             setNewSession();
         }
-		//else if(request.command == "recordSearch") {
-		//	var interest = {};
-		//	interest.sessionId = sessionId;
-		//	interest.interest = request.interest;
-		//	interest.time = getTime();
-         //   navigator.geolocation.getCurrentPosition (function (position) {
-         //       interest.geoLatitude = position.coords.latitude
-         //       interest.geoLongditude = position.coords.longitude
-		//		storeInterest(interest);
-         //   }, function() {
-		//			storeInterest(interest);
-		//	});
-		//}
-		//else if(request.command == 'generateQuery') {
-		//	createQuery();
-		//}
         return true; // Needed because the response is asynchronous
     }
 );
@@ -196,13 +182,21 @@ function generateMachineId() {
 
 function setSessionTimeout() {
     var d = Date.now();
-    if (session == undefined || +session['timeout'] < +d || (+session['sessionId']+4*MILLISECONDS_PER_HOUR < +d) ) {
+    if (isSessionValid()) {
         session = {};
         session['sessionId'] = d;
     }
     var t = new Date(+d + 1*MILLISECONDS_PER_HOUR);
     session['timeout'] = t;
     chrome.storage.local.set({'session': session})
+}
+
+function isSessionValid() {
+    var d = Date.now();
+    if (session == undefined || +session['timeout'] < +d || (+session['sessionId']+4*MILLISECONDS_PER_HOUR < +d) ) {
+        return false
+    }
+    return true
 }
 
 function setSession() {
