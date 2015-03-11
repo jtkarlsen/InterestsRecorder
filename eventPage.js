@@ -48,13 +48,14 @@ chrome.runtime.onMessage.addListener(
         }
 		else if(request.command == "recordPageVisit") {
 			var domain = request.domain;
-            if (isSessionValid()) {
-                chrome.storage.local.get('username', function (result) {
-                    if (result.username !== undefined && result.username !== '') {
-                        submitDomain(domain);
-                    }
-                })
+            if (!isSessionValid()) {
+                setSessionTimeout();
             }
+            chrome.storage.local.get('username', function (result) {
+                if (result.username !== undefined && result.username !== '') {
+                    submitDomain(domain);
+                }
+            })
 		}
         else if(request.command == "userLogout") {
             setNewSession();
