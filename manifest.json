@@ -1,7 +1,7 @@
 {
 	"manifest_version": 2,
 	"name": "InterestRecorder",
-	"version": "1.4.4",
+	"version": "1.4.6",
 	"description": "Records interests by monitoring link clicks.",
 	"permissions": [
 		"storage",
@@ -21,7 +21,7 @@
 		"persistent": false
 	},
 	"browser_action": {
-		"default_icon": "eye106.png",
+		"default_icon": "ordinary.png",
 		"default_popup": "popup.html"
 	}
 }

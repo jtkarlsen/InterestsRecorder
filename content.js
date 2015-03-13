@@ -34,7 +34,7 @@ setTimeout(function() {
 if(window.location.href.indexOf("http://129.242.219.56/") > -1
     || window.location.href.indexOf("http://localhost:8080/") > -1) {
 
-	chrome.storage.local.get('username', function (result) {
+	chrome.storage.sync.get('username', function (result) {
 		var username = result.username;
 		if (username !== undefined || username !== '') {
             var event = new CustomEvent('InterestsEvent', { 'detail': username });

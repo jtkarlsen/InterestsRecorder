@@ -27,7 +27,7 @@ function setUserCredentials() {
 }
 
 function removeUserCredentials() {
-    chrome.storage.local.set({'username': ''}, function() {
+    chrome.storage.sync.set({'username': ''}, function() {
         if (chrome.extension.lastError) {
             alert('An error occurred: ' + chrome.extension.lastError.message);
         }
@@ -35,6 +35,7 @@ function removeUserCredentials() {
     setLoginVisible();
     document.getElementById("message").innerHTML = 'Not logged in';
     chrome.runtime.sendMessage({command: "userLogout"});
+    chrome.runtime.sendMessage({command: "changeIcon", icon: "!"})
 }
 
 function createUserCredentials() {
@@ -62,22 +63,26 @@ function createUserCredentials() {
         xmlHttp.send( params );
     }
 }
+
 function init() {
     setLoginVisible();
-    chrome.storage.local.get('username', function (result) {
+    chrome.storage.sync.get('username', function (result) {
         var username = '';
         if (result.username !== undefined && result.username !== '') {
             username = result.username;
             showUsername(username);
             setLogoutVisible();
+        } else {
+            chrome.runtime.sendMessage({command: "changeIcon", icon: "!"})
         }
     })
 }
 
 function setAuthenticated(username) {
-    chrome.storage.local.set({'username': username});
+    chrome.storage.sync.set({'username': username});
     setLogoutVisible();
     showUsername(username);
+    chrome.runtime.sendMessage({command: "changeIcon", icon: ""})
 }
 
 function setLoginVisible() {
@@ -91,7 +96,7 @@ function setLogoutVisible() {
 }
 
 function showUsername(username) {
-    document.getElementById("message").innerHTML = 'User: '+username;
+    document.getElementById("message").innerHTML = 'Logged inn as '+username;
 }
 
 window.onload = function() {

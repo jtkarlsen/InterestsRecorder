@@ -51,7 +51,7 @@ chrome.runtime.onMessage.addListener(
             if (!isSessionValid()) {
                 setSessionTimeout();
             }
-            chrome.storage.local.get('username', function (result) {
+            chrome.storage.sync.get('username', function (result) {
                 if (result.username !== undefined && result.username !== '') {
                     submitDomain(domain);
                 }
@@ -59,6 +59,9 @@ chrome.runtime.onMessage.addListener(
 		}
         else if(request.command == "userLogout") {
             setNewSession();
+        }
+        else if(request.command == "changeIcon") {
+            setIcon(request.icon);
         }
         return true; // Needed because the response is asynchronous
     }
@@ -100,7 +103,7 @@ function storeInterest(interest) {
 	
 	interest.interest = cleanedInterestsWithoutStopWords;
 	if(interest.interest.length > 0) {
-        chrome.storage.local.get('username', function (result) {
+        chrome.storage.sync.get('username', function (result) {
             if (result.username !== undefined && result.username !== '') {
                 submitInterest(interest, result.username)
             }
@@ -194,7 +197,7 @@ function setSessionTimeout() {
 
 function isSessionValid() {
     var d = Date.now();
-    if (session == undefined || +session['timeout'] < +d || (+session['sessionId']+4*MILLISECONDS_PER_HOUR < +d) ) {
+    if (session === undefined || +session['timeout'] < +d || (+session['sessionId']+4*MILLISECONDS_PER_HOUR < +d) ) {
         return false
     }
     return true
@@ -213,6 +216,15 @@ function setSession() {
 function setNewSession() {
     session = undefined;
     setSessionTimeout();
+}
+
+function setIcon(icon) {
+    //chrome.browserAction.setIcon({
+    //    path: icon
+    //});
+    chrome.browserAction.setBadgeText({
+        text: icon
+    })
 }
 
 setMachineId();
