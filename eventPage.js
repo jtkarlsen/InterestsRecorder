@@ -186,7 +186,7 @@ function generateMachineId() {
 
 function setSessionTimeout() {
     var d = Date.now();
-    if (isSessionValid()) {
+    if (!isSessionValid()) {
         session = {};
         session['sessionId'] = d;
     }
